@@ -1,36 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FreeBeer.Studio Core Dashboard
 
-## Getting Started
+**Status**: ✅ Week 3 Day 1 Complete (Foundation Built)
+**Created**: 2026-01-03
+**Phase**: 2 - Development
+**Week**: 3 of 7
 
-First, run the development server:
+---
+
+## 🎯 What This Is
+
+Real-time monitoring dashboard for all FreeBeer.Studio business units (BUs). Provides:
+- BU health status and response times
+- LLM cost tracking (rolling 30-day window)
+- System events timeline
+- Vercel deployment links (v1 - simple links)
+
+---
+
+## 🚀 Quick Start
 
 ```bash
+# Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Open browser
+open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Key Files
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+dashboard/
+├── app/
+│   ├── api/
+│   │   ├── health/route.ts       # BU health check endpoint
+│   │   ├── llm-costs/route.ts    # LLM cost aggregation
+│   │   ├── events/route.ts       # System events (24hr)
+│   │   └── setup/route.ts        # Database initialization
+│   └── page.tsx                  # Main dashboard (client component)
+├── components/ui/                # shadcn/ui components
+├── lib/
+│   ├── supabase.ts              # Supabase client
+│   └── types.ts                 # TypeScript types
+└── .env.local                   # Environment variables
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🔌 API Endpoints
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### `GET /api/health` - Business Unit Health
+Returns health status for all BUs with response times and status badges.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### `GET /api/llm-costs` - LLM Cost Summary
+Returns rolling 30-day LLM usage costs and call counts.
 
-## Deploy on Vercel
+### `GET /api/events` - Recent Events
+Returns system events from last 24 hours with formatted timestamps.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### `POST /api/setup` - Database Setup
+One-time initialization to create views and seed data.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🎨 Features
+
+### ✅ Completed (Week 3 Day 1)
+
+1. **Project Foundation**
+   - Next.js 15 with App Router
+   - TypeScript + Tailwind CSS
+   - shadcn/ui components
+   - Supabase integration
+
+2. **Dashboard UI**
+   - 3-column responsive layout
+   - Real-time BU health cards
+   - LLM cost tracker with progress bar
+   - System events timeline
+   - Auto-refresh every 30 seconds
+
+3. **API Routes**
+   - Health monitoring
+   - Cost aggregation
+   - Event tracking
+
+### 🔲 Next Steps (Week 3 Day 2-7)
+
+- [ ] Run database setup
+- [ ] Implement 5-minute health check cron
+- [ ] Deploy to Vercel
+- [ ] Configure production env vars
+
+---
+
+## 🐛 Known Issues
+
+1. Need to run `/api/setup` to initialize database views
+2. Health check cron job not yet implemented
+3. Database empty until setup completes
+
+---
+
+## 📚 References
+
+- **PRD**: `~/Obsidian/FreeBeer.Studio/Projects/PRD-core-dashboard.md`
+- **Kickoff**: `~/Obsidian/FreeBeer.Studio/Projects/PHASE-2-KICKOFF.md`
+- **Schema**: `~/Obsidian/FreeBeer.Studio/Resources/Build-Documentation/DATABASE-SCHEMA-FIXED.sql`
+
+---
+
+**Last Updated**: 2026-01-03

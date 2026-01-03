@@ -1,63 +1,215 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import type { BusinessUnit, LLMCosts, SystemEvent } from "@/lib/types"
+
+export default function Dashboard() {
+  const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>([])
+  const [llmCosts, setLlmCosts] = useState<LLMCosts | null>(null)
+  const [events, setEvents] = useState<SystemEvent[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [healthRes, costsRes, eventsRes] = await Promise.all([
+          fetch('/api/health'),
+          fetch('/api/llm-costs'),
+          fetch('/api/events')
+        ])
+
+        const healthData = await healthRes.json()
+        const costsData = await costsRes.json()
+        const eventsData = await eventsRes.json()
+
+        setBusinessUnits(healthData.data || [])
+        setLlmCosts(costsData.data)
+        setEvents(eventsData.data || [])
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+
+    // Refresh data every 30 seconds
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const costPercentage = llmCosts ? Math.min((llmCosts.total_cost_30d / 20) * 100, 100) : 0
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+      {/* Header */}
+      <header className="border-b bg-white dark:bg-zinc-950">
+        <div className="container mx-auto px-6 py-4">
+          <h1 className="text-2xl font-bold">FreeBeer.Studio Dashboard</h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Real-time monitoring for all business units
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      {/* Main Content - 3 Column Layout */}
+      <main className="container mx-auto px-6 py-8">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Column 1-2: Business Units */}
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Business Units</h2>
+
+              {loading ? (
+                <Card>
+                  <CardContent className="py-8">
+                    <p className="text-center text-zinc-600">Loading business units...</p>
+                  </CardContent>
+                </Card>
+              ) : businessUnits.length === 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>No business units yet</CardTitle>
+                    <CardDescription>Add your first BU to start monitoring</CardDescription>
+                  </CardHeader>
+                </Card>
+              ) : (
+                businessUnits.map((bu) => (
+                  <Card key={bu.site_id} className="mb-4">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle>{bu.site_name}</CardTitle>
+                        <Badge
+                          variant="default"
+                          className={
+                            bu.status_badge === 'healthy' ? 'bg-green-500' :
+                            bu.status_badge === 'warning' ? 'bg-yellow-500' :
+                            bu.status_badge === 'critical' ? 'bg-red-500' :
+                            'bg-zinc-500'
+                          }
+                        >
+                          {bu.status_badge === 'healthy' ? 'Healthy' :
+                           bu.status_badge === 'warning' ? 'Warning' :
+                           bu.status_badge === 'critical' ? 'Critical' :
+                           'Unknown'}
+                        </Badge>
+                      </div>
+                      <CardDescription>{bu.bu_name}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-zinc-600 dark:text-zinc-400">Status:</span>
+                          <span className="font-medium">
+                            {bu.health_status === 'healthy' ? 'All systems operational' :
+                             bu.health_status === 'warning' ? 'Performance degraded' :
+                             bu.health_status === 'critical' ? 'Service down' :
+                             'Status unknown'}
+                          </span>
+                        </div>
+                        {bu.response_time_ms && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-600 dark:text-zinc-400">Response Time:</span>
+                            <span className="font-medium">{bu.response_time_ms}ms</span>
+                          </div>
+                        )}
+                        {bu.last_check && (
+                          <div className="flex justify-between">
+                            <span className="text-zinc-600 dark:text-zinc-400">Last Check:</span>
+                            <span className="font-medium">
+                              {new Date(bu.last_check).toLocaleTimeString()}
+                            </span>
+                          </div>
+                        )}
+                        {bu.error_message && (
+                          <div className="mt-2 p-2 bg-red-50 rounded text-red-700 dark:bg-red-900/20 dark:text-red-400">
+                            {bu.error_message}
+                          </div>
+                        )}
+                        <div className="mt-4">
+                          <a
+                            href={`https://vercel.com/freebeerstudio/${bu.domain.replace('.', '-')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                          >
+                            View in Vercel →
+                          </a>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Column 3: LLM Cost Overview & Events */}
+          <div className="space-y-6">
+            {/* LLM Cost Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle>LLM Costs</CardTitle>
+                <CardDescription>Rolling 30-day window</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-baseline mb-2">
+                      <span className="text-2xl font-bold">
+                        ${llmCosts?.total_cost_30d.toFixed(2) || '0.00'}
+                      </span>
+                      <span className="text-sm text-zinc-600 dark:text-zinc-400">/ $20.00 target</span>
+                    </div>
+                    <div className="w-full bg-zinc-200 rounded-full h-2 dark:bg-zinc-700">
+                      <div
+                        className={`h-2 rounded-full ${costPercentage < 75 ? 'bg-green-500' : costPercentage < 90 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ width: `${costPercentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                    {llmCosts && llmCosts.total_calls > 0 ? (
+                      <>
+                        {llmCosts.total_calls} API call{llmCosts.total_calls !== 1 ? 's' : ''} in last 30 days
+                        <br />
+                        Avg: ${llmCosts.avg_daily_cost.toFixed(2)}/day
+                      </>
+                    ) : (
+                      'No LLM usage tracked yet. Cost tracker will activate when first API call is logged.'
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Events */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Events</CardTitle>
+                <CardDescription>Last 24 hours</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  {events.length === 0 ? (
+                    <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                      No recent events. Business operations events will appear here.
+                    </div>
+                  ) : (
+                    events.map((event) => (
+                      <div key={event.id} className="flex gap-3">
+                        <div className="text-zinc-400 min-w-[80px]">{event.time_ago}</div>
+                        <div>{event.description}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
