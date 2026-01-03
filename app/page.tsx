@@ -81,17 +81,28 @@ export default function Dashboard() {
                   <Card key={bu.site_id} className="mb-4">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle>{bu.site_name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">
+                            {bu.status_badge === 'healthy' ? '🟢' :
+                             bu.status_badge === 'degraded' ? '🟡' :
+                             bu.status_badge === 'warning' ? '🟠' :
+                             bu.status_badge === 'critical' ? '🔴' :
+                             '⚪'}
+                          </span>
+                          <CardTitle>{bu.site_name}</CardTitle>
+                        </div>
                         <Badge
                           variant="default"
                           className={
-                            bu.status_badge === 'healthy' ? 'bg-green-500' :
-                            bu.status_badge === 'warning' ? 'bg-yellow-500' :
-                            bu.status_badge === 'critical' ? 'bg-red-500' :
-                            'bg-zinc-500'
+                            bu.status_badge === 'healthy' ? 'bg-green-500 hover:bg-green-600' :
+                            bu.status_badge === 'degraded' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                            bu.status_badge === 'warning' ? 'bg-orange-500 hover:bg-orange-600' :
+                            bu.status_badge === 'critical' ? 'bg-red-500 hover:bg-red-600' :
+                            'bg-zinc-500 hover:bg-zinc-600'
                           }
                         >
                           {bu.status_badge === 'healthy' ? 'Healthy' :
+                           bu.status_badge === 'degraded' ? 'Degraded' :
                            bu.status_badge === 'warning' ? 'Warning' :
                            bu.status_badge === 'critical' ? 'Critical' :
                            'Unknown'}
@@ -200,9 +211,17 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     events.map((event) => (
-                      <div key={event.id} className="flex gap-3">
-                        <div className="text-zinc-400 min-w-[80px]">{event.time_ago}</div>
-                        <div>{event.description}</div>
+                      <div key={event.id} className="flex gap-3 py-2 border-b last:border-0">
+                        <div className="shrink-0">
+                          {event.severity === 'critical' ? '🔴' :
+                           event.severity === 'warning' ? '🟡' :
+                           event.severity === 'info' ? '🔵' :
+                           '⚪'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{event.description}</div>
+                          <div className="text-xs text-zinc-400 mt-1">{event.time_ago}</div>
+                        </div>
                       </div>
                     ))
                   )}
