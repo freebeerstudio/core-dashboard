@@ -3,30 +3,34 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { BusinessUnit, LLMCosts, SystemEvent } from "@/lib/types"
+import type { BusinessUnit, LLMCosts, SystemEvent, RevenueData } from "@/lib/types"
 
 export default function Dashboard() {
   const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>([])
   const [llmCosts, setLlmCosts] = useState<LLMCosts | null>(null)
   const [events, setEvents] = useState<SystemEvent[]>([])
+  const [revenueData, setRevenueData] = useState<RevenueData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [healthRes, costsRes, eventsRes] = await Promise.all([
+        const [healthRes, costsRes, eventsRes, revenueRes] = await Promise.all([
           fetch('/api/health'),
           fetch('/api/llm-costs'),
-          fetch('/api/events')
+          fetch('/api/events'),
+          fetch('/api/revenue')
         ])
 
         const healthData = await healthRes.json()
         const costsData = await costsRes.json()
         const eventsData = await eventsRes.json()
+        const revenueResData = await revenueRes.json()
 
         setBusinessUnits(healthData.data || [])
         setLlmCosts(costsData.data)
         setEvents(eventsData.data || [])
+        setRevenueData(revenueResData.data)
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error)
       } finally {
@@ -158,8 +162,49 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Column 3: LLM Cost Overview & Events */}
+          {/* Column 3: Revenue, LLM Cost Overview & Events */}
           <div className="space-y-6">
+            {/* Revenue Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue</CardTitle>
+                <CardDescription>Last 30 days</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-baseline mb-2">
+                      <span className="text-2xl font-bold">
+                        ${revenueData?.total_revenue_30d.toFixed(2) || '0.00'}
+                      </span>
+                      <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {revenueData?.total_transactions || 0} transaction{revenueData?.total_transactions !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-zinc-600 dark:text-zinc-400">MRR</div>
+                      <div className="text-lg font-semibold">${revenueData?.mrr.toFixed(2) || '0.00'}</div>
+                    </div>
+                    <div>
+                      <div className="text-zinc-600 dark:text-zinc-400">Active Subs</div>
+                      <div className="text-lg font-semibold">{revenueData?.active_subscriptions || 0}</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                    {revenueData && revenueData.total_transactions > 0 ? (
+                      <>
+                        Avg daily revenue: ${revenueData.avg_daily_revenue.toFixed(2)}
+                      </>
+                    ) : (
+                      'No revenue tracked yet. Revenue tracking begins when first payment is received.'
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* LLM Cost Panel */}
             <Card>
               <CardHeader>

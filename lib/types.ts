@@ -26,3 +26,20 @@ export interface SystemEvent {
   created_at: string
   time_ago: string
 }
+
+export interface RevenueData {
+  total_revenue_30d: number
+  mrr: number
+  active_subscriptions: number
+  total_transactions: number
+  avg_daily_revenue: number
+  recent_transactions: RevenueTransaction[]
+}
+
+export interface RevenueTransaction {
+  id: string
+  amount: number
+  currency: string
+  date: string
+  customer_id: string
+}
