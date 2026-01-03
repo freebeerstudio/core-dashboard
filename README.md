@@ -107,21 +107,21 @@ Name: dashboard
 Value: 76.76.21.21
 Proxy: Enabled (Orange cloud)
 
-Type: A
-Name: staging-dashboard
-Value: 76.76.21.21
+Type: CNAME
+Name: staging.dashboard
+Value: cname.vercel-dns.com
 Proxy: Enabled (Orange cloud)
 
-Type: A
-Name: dev-dashboard
-Value: 76.76.21.21
+Type: CNAME
+Name: dev.dashboard
+Value: cname.vercel-dns.com
 Proxy: Enabled (Orange cloud)
 ```
 
 **After DNS is configured:**
 - Production: https://dashboard.freebeer.studio
-- Staging: https://staging-dashboard.freebeer.studio
-- Dev: https://dev-dashboard.freebeer.studio
+- Staging: https://staging.dashboard.freebeer.studio
+- Dev: https://dev.dashboard.freebeer.studio
 
 ---
 
