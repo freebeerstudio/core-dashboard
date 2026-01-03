@@ -3,5 +3,11 @@
     "passwordProtection": {
       "enabled": false
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }
