@@ -77,6 +77,7 @@ export async function GET(request: Request) {
           .from('health_checks')
           .insert({
             site_id: site.id,
+            endpoint: `https://${site.domain}`,
             status,
             response_time_ms: responseTimeMs,
             status_code: statusCode,
