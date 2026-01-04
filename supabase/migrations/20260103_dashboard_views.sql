@@ -21,11 +21,12 @@ SELECT
   hc.checked_at as last_check,
   hc.error_message,
 
-  -- Status badge (healthy, warning, critical, unknown)
+  -- Status badge (healthy, degraded, warning, critical, unknown)
   CASE
-    WHEN hc.status = 'up' AND hc.response_time_ms < 1000 THEN 'healthy'
-    WHEN hc.status = 'up' AND hc.response_time_ms < 3000 THEN 'warning'
-    WHEN hc.status = 'down' THEN 'critical'
+    WHEN hc.status = 'healthy' THEN 'healthy'
+    WHEN hc.status = 'degraded' THEN 'degraded'
+    WHEN hc.status = 'warning' THEN 'warning'
+    WHEN hc.status = 'critical' THEN 'critical'
     ELSE 'unknown'
   END as status_badge,
 
