@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     const healthChecks = await Promise.all(
       sites.map(async (site) => {
         const startTime = Date.now();
-        let status = 'up';
+        let status = 'healthy';
         let responseTimeMs = 0;
         let statusCode = 0;
         let shouldAlert = false;
@@ -56,16 +56,20 @@ export async function GET(request: Request) {
 
           // Determine health status based on response
           if (response.ok) {
-            status = 'up';
+            if (responseTimeMs > 3000) {
+              status = 'degraded';
+            } else {
+              status = 'healthy';
+            }
           } else if (response.status >= 500) {
-            status = 'down';
+            status = 'critical';
             shouldAlert = true;
           } else {
-            status = 'up'; // 4xx errors still considered "up" but degraded
+            status = 'warning'; // 4xx errors
           }
         } catch (error) {
           // Site is down or unreachable
-          status = 'down';
+          status = 'critical';
           shouldAlert = true;
           responseTimeMs = Date.now() - startTime;
           statusCode = 0;
