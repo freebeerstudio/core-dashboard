@@ -3,6 +3,8 @@ import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import type Stripe from 'stripe'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/stripe/subscriptions - List all subscriptions
 export async function GET() {
   try {

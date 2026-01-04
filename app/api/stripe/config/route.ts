@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getStripePublishableKey } from '@/lib/stripe'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const publishableKey = getStripePublishableKey()
