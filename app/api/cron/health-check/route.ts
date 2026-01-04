@@ -39,9 +39,10 @@ export async function GET(request: Request) {
     const healthChecks = await Promise.all(
       sites.map(async (site) => {
         const startTime = Date.now();
-        let status = 'healthy';
+        let status = 'up';
         let responseTimeMs = 0;
         let statusCode = 0;
+        let shouldAlert = false;
 
         try {
           const response = await fetch(`https://${site.domain}`, {
@@ -55,19 +56,17 @@ export async function GET(request: Request) {
 
           // Determine health status based on response
           if (response.ok) {
-            if (responseTimeMs > 3000) {
-              status = 'degraded'; // Slow but working
-            } else {
-              status = 'healthy';
-            }
+            status = 'up';
           } else if (response.status >= 500) {
-            status = 'critical';
+            status = 'down';
+            shouldAlert = true;
           } else {
-            status = 'warning';
+            status = 'up'; // 4xx errors still considered "up" but degraded
           }
         } catch (error) {
           // Site is down or unreachable
-          status = 'critical';
+          status = 'down';
+          shouldAlert = true;
           responseTimeMs = Date.now() - startTime;
           statusCode = 0;
         }
@@ -87,8 +86,8 @@ export async function GET(request: Request) {
           console.error(`Failed to insert health check for ${site.domain}:`, insertError);
         }
 
-        // Log critical events
-        if (status === 'critical') {
+        // Log critical events when site is down
+        if (shouldAlert) {
           await supabase.from('system_events').insert({
             site_id: site.id,
             event_type: 'alert',
