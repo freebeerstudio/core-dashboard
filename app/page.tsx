@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { BusinessUnit, LLMCosts, SystemEvent, RevenueData } from "@/lib/types"
+import { formatCentralTime } from "@/lib/formatDate"
 
 export default function Dashboard() {
   const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>([])
@@ -135,14 +136,7 @@ export default function Dashboard() {
                           <div className="flex justify-between">
                             <span className="text-zinc-600 dark:text-zinc-400">Last Check:</span>
                             <span className="font-medium">
-                              {new Date(bu.last_check).toLocaleString('en-US', {
-                                timeZone: 'America/Chicago',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true
-                              })} CST
+                              {formatCentralTime(bu.last_check)}
                             </span>
                           </div>
                         )}
