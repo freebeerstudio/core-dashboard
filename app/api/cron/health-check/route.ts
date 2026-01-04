@@ -92,7 +92,7 @@ export async function GET(request: Request) {
 
         // Log critical events when site is down
         if (shouldAlert) {
-          await supabase.from('system_events').insert({
+          const { error: eventError } = await supabase.from('system_events').insert({
             site_id: site.id,
             event_type: 'alert',
             severity: 'critical',
@@ -102,6 +102,10 @@ export async function GET(request: Request) {
               response_time_ms: responseTimeMs,
             },
           });
+
+          if (eventError) {
+            console.error(`Failed to insert critical event for ${site.domain}:`, eventError);
+          }
         }
 
         return {
