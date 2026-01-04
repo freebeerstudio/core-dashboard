@@ -21,8 +21,8 @@ export async function GET(request: Request) {
     // Get all active sites from database
     const { data: sites, error: sitesError } = await supabase
       .from('sites')
-      .select('site_id, domain, site_name')
-      .eq('active', true);
+      .select('id, domain, name')
+      .in('status', ['production', 'development', 'staging']);
 
     if (sitesError) {
       throw new Error(`Failed to fetch sites: ${sitesError.message}`);
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
         const { error: insertError } = await supabase
           .from('health_checks')
           .insert({
-            site_id: site.site_id,
+            site_id: site.id,
             status,
             response_time_ms: responseTimeMs,
             status_code: statusCode,
@@ -89,10 +89,10 @@ export async function GET(request: Request) {
         // Log critical events
         if (status === 'critical') {
           await supabase.from('system_events').insert({
-            site_id: site.site_id,
+            site_id: site.id,
             event_type: 'alert',
             severity: 'critical',
-            description: `${site.site_name} is DOWN (${site.domain})`,
+            description: `${site.name} is DOWN (${site.domain})`,
             metadata: {
               status_code: statusCode,
               response_time_ms: responseTimeMs,
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
         }
 
         return {
-          site: site.site_name,
+          site: site.name,
           domain: site.domain,
           status,
           responseTimeMs,
