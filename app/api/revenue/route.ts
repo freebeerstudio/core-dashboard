@@ -30,19 +30,16 @@ export async function GET() {
     // Calculate MRR (Monthly Recurring Revenue) from active subscriptions
     const { data: activeSubscriptions, error: subsError } = await supabase
       .from('subscriptions')
-      .select(`
-        *,
-        revenue_events(amount)
-      `)
+      .select('*')
       .in('status', ['active', 'trialing'])
 
     if (subsError) throw subsError
 
-    // Get Stripe subscription amounts (this is simplified - would need to fetch from Stripe for accurate MRR)
-    const mrr = activeSubscriptions?.length || 0 // Placeholder - would calculate from subscription amounts
-
     // Get active subscription count
     const activeSubscriptionCount = activeSubscriptions?.length || 0
+
+    // MRR placeholder - would need to fetch pricing data from Stripe for accurate calculation
+    const mrr = 0
 
     // Calculate daily average
     const avgDailyRevenue = totalRevenue30d > 0 ? totalRevenue30d / 30 : 0
