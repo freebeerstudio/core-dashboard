@@ -32,7 +32,7 @@ export async function GET() {
           .order('checked_at', { ascending: false });
 
         if (checksError) {
-          console.error(`Error fetching checks for ${site.site_name}:`, checksError);
+          console.error(`Error fetching checks for ${site.name}:`, checksError);
           return null;
         }
 
