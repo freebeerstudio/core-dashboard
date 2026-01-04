@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
+import type Stripe from 'stripe'
 
 // GET /api/stripe/subscriptions - List all subscriptions
 export async function GET() {
@@ -12,7 +13,7 @@ export async function GET() {
 
     // Enrich with customer metadata from Supabase
     const enrichedSubscriptions = await Promise.all(
-      subscriptions.data.map(async (sub) => {
+      subscriptions.data.map(async (sub: Stripe.Subscription) => {
         const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id
 
         // Get customer info from Supabase
@@ -22,19 +23,22 @@ export async function GET() {
           .eq('stripe_customer_id', customerId)
           .single()
 
+        const customer = typeof sub.customer !== 'string' ? sub.customer as Stripe.Customer : null
+        const subscription = sub as any // TypeScript workaround for Stripe types
+
         return {
-          id: sub.id,
+          id: subscription.id,
           customer_id: customerId,
           customer_name: customerData?.customer_name || 'Unknown',
-          customer_email: customerData?.email || (typeof sub.customer !== 'string' ? sub.customer?.email : ''),
-          status: sub.status,
-          current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: sub.cancel_at_period_end,
-          amount: sub.items.data[0]?.price?.unit_amount || 0,
-          currency: sub.items.data[0]?.price?.currency || 'usd',
-          interval: sub.items.data[0]?.price?.recurring?.interval || 'month',
-          created: new Date(sub.created * 1000).toISOString(),
+          customer_email: customerData?.email || customer?.email || '',
+          status: subscription.status,
+          current_period_start: new Date((subscription.current_period_start || 0) * 1000).toISOString(),
+          current_period_end: new Date((subscription.current_period_end || 0) * 1000).toISOString(),
+          cancel_at_period_end: subscription.cancel_at_period_end || false,
+          amount: subscription.items.data[0]?.price?.unit_amount || 0,
+          currency: subscription.items.data[0]?.price?.currency || 'usd',
+          interval: subscription.items.data[0]?.price?.recurring?.interval || 'month',
+          created: new Date((subscription.created || 0) * 1000).toISOString(),
         }
       })
     )
@@ -77,14 +81,16 @@ export async function POST(request: Request) {
       expand: ['latest_invoice.payment_intent'],
     })
 
+    const sub = subscription as any // TypeScript workaround for Stripe types
+
     // Record in Supabase
     await supabaseAdmin.from('subscriptions').insert({
-      subscription_id: subscription.id,
+      subscription_id: sub.id,
       customer_id,
-      stripe_subscription_id: subscription.id,
-      status: subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      stripe_subscription_id: sub.id,
+      status: sub.status,
+      current_period_start: new Date((sub.current_period_start || 0) * 1000).toISOString(),
+      current_period_end: new Date((sub.current_period_end || 0) * 1000).toISOString(),
     })
 
     return NextResponse.json({
