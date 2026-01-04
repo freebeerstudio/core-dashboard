@@ -89,18 +89,47 @@ One-time initialization to create views and seed data.
 
 ### 🔲 Next Steps (Week 3 Day 2-7)
 
-- [ ] Run database setup
+- [x] Run database setup
+- [x] Deploy to Vercel
+- [x] Configure production env vars
+- [x] Set up GitHub repo and branches (main, staging, dev)
+- [ ] **Configure Cloudflare DNS** (see below)
 - [ ] Implement 5-minute health check cron
-- [ ] Deploy to Vercel
-- [ ] Configure production env vars
+- [ ] Test all three environments (prod, staging, dev)
+
+### Cloudflare DNS Configuration Needed
+
+The following DNS records need to be added in Cloudflare for `freebeer.studio`:
+
+```
+Type: A
+Name: dashboard
+Value: 76.76.21.21
+Proxy: Enabled (Orange cloud)
+
+Type: CNAME
+Name: staging.dashboard
+Value: cname.vercel-dns.com
+Proxy: Enabled (Orange cloud)
+
+Type: CNAME
+Name: dev.dashboard
+Value: cname.vercel-dns.com
+Proxy: Enabled (Orange cloud)
+```
+
+**After DNS is configured:**
+- Production: https://dashboard.freebeer.studio
+- Staging: https://staging.dashboard.freebeer.studio
+- Dev: https://dev.dashboard.freebeer.studio
 
 ---
 
 ## 🐛 Known Issues
 
-1. Need to run `/api/setup` to initialize database views
+1. Cloudflare DNS records not yet configured (domains won't resolve until added)
 2. Health check cron job not yet implemented
-3. Database empty until setup completes
+3. Need to verify all three environments work after DNS is configured
 
 ---
 

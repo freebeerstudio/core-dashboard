@@ -3,30 +3,34 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { BusinessUnit, LLMCosts, SystemEvent } from "@/lib/types"
+import type { BusinessUnit, LLMCosts, SystemEvent, RevenueData } from "@/lib/types"
 
 export default function Dashboard() {
   const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>([])
   const [llmCosts, setLlmCosts] = useState<LLMCosts | null>(null)
   const [events, setEvents] = useState<SystemEvent[]>([])
+  const [revenueData, setRevenueData] = useState<RevenueData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [healthRes, costsRes, eventsRes] = await Promise.all([
+        const [healthRes, costsRes, eventsRes, revenueRes] = await Promise.all([
           fetch('/api/health'),
           fetch('/api/llm-costs'),
-          fetch('/api/events')
+          fetch('/api/events'),
+          fetch('/api/revenue')
         ])
 
         const healthData = await healthRes.json()
         const costsData = await costsRes.json()
         const eventsData = await eventsRes.json()
+        const revenueResData = await revenueRes.json()
 
         setBusinessUnits(healthData.data || [])
         setLlmCosts(costsData.data)
         setEvents(eventsData.data || [])
+        setRevenueData(revenueResData.data)
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error)
       } finally {
@@ -81,17 +85,28 @@ export default function Dashboard() {
                   <Card key={bu.site_id} className="mb-4">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle>{bu.site_name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">
+                            {bu.status_badge === 'healthy' ? '🟢' :
+                             bu.status_badge === 'degraded' ? '🟡' :
+                             bu.status_badge === 'warning' ? '🟠' :
+                             bu.status_badge === 'critical' ? '🔴' :
+                             '⚪'}
+                          </span>
+                          <CardTitle>{bu.site_name}</CardTitle>
+                        </div>
                         <Badge
                           variant="default"
                           className={
-                            bu.status_badge === 'healthy' ? 'bg-green-500' :
-                            bu.status_badge === 'warning' ? 'bg-yellow-500' :
-                            bu.status_badge === 'critical' ? 'bg-red-500' :
-                            'bg-zinc-500'
+                            bu.status_badge === 'healthy' ? 'bg-green-500 hover:bg-green-600' :
+                            bu.status_badge === 'degraded' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                            bu.status_badge === 'warning' ? 'bg-orange-500 hover:bg-orange-600' :
+                            bu.status_badge === 'critical' ? 'bg-red-500 hover:bg-red-600' :
+                            'bg-zinc-500 hover:bg-zinc-600'
                           }
                         >
                           {bu.status_badge === 'healthy' ? 'Healthy' :
+                           bu.status_badge === 'degraded' ? 'Degraded' :
                            bu.status_badge === 'warning' ? 'Warning' :
                            bu.status_badge === 'critical' ? 'Critical' :
                            'Unknown'}
@@ -147,8 +162,49 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Column 3: LLM Cost Overview & Events */}
+          {/* Column 3: Revenue, LLM Cost Overview & Events */}
           <div className="space-y-6">
+            {/* Revenue Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue</CardTitle>
+                <CardDescription>Last 30 days</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-baseline mb-2">
+                      <span className="text-2xl font-bold">
+                        ${revenueData ? revenueData.total_revenue_30d.toFixed(2) : '0.00'}
+                      </span>
+                      <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {revenueData?.total_transactions ?? 0} transaction{(revenueData?.total_transactions ?? 0) !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-zinc-600 dark:text-zinc-400">MRR</div>
+                      <div className="text-lg font-semibold">${revenueData ? revenueData.mrr.toFixed(2) : '0.00'}</div>
+                    </div>
+                    <div>
+                      <div className="text-zinc-600 dark:text-zinc-400">Active Subs</div>
+                      <div className="text-lg font-semibold">{revenueData?.active_subscriptions ?? 0}</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                    {revenueData && revenueData.total_transactions > 0 ? (
+                      <>
+                        Avg daily revenue: ${revenueData.avg_daily_revenue.toFixed(2)}
+                      </>
+                    ) : (
+                      'No revenue tracked yet. Revenue tracking begins when first payment is received.'
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* LLM Cost Panel */}
             <Card>
               <CardHeader>
@@ -200,9 +256,17 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     events.map((event) => (
-                      <div key={event.id} className="flex gap-3">
-                        <div className="text-zinc-400 min-w-[80px]">{event.time_ago}</div>
-                        <div>{event.description}</div>
+                      <div key={event.id} className="flex gap-3 py-2 border-b last:border-0">
+                        <div className="shrink-0">
+                          {event.severity === 'critical' ? '🔴' :
+                           event.severity === 'warning' ? '🟡' :
+                           event.severity === 'info' ? '🔵' :
+                           '⚪'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{event.description}</div>
+                          <div className="text-xs text-zinc-400 mt-1">{event.time_ago}</div>
+                        </div>
                       </div>
                     ))
                   )}
