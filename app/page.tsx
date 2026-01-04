@@ -135,7 +135,7 @@ export default function Dashboard() {
                           <div className="flex justify-between">
                             <span className="text-zinc-600 dark:text-zinc-400">Last Check:</span>
                             <span className="font-medium">
-                              {new Date(bu.last_check).toLocaleTimeString()}
+                              {new Date(bu.last_check).toLocaleTimeString('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', second: '2-digit' })}
                             </span>
                           </div>
                         )}
