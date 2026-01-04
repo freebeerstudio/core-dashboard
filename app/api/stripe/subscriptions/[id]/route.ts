@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/stripe/subscriptions/[id] - Get subscription details
 export async function GET(
   request: Request,
