@@ -8,7 +8,7 @@ export interface BusinessUnit {
   response_time_ms: number | null
   last_check: string | null
   error_message: string | null
-  status_badge: 'healthy' | 'warning' | 'critical' | 'unknown'
+  status_badge: 'healthy' | 'degraded' | 'warning' | 'critical' | 'unknown'
 }
 
 export interface LLMCosts {
@@ -20,8 +20,26 @@ export interface LLMCosts {
 export interface SystemEvent {
   id: string
   event_type: string
+  severity: 'info' | 'warning' | 'critical'
   description: string
   metadata: any
   created_at: string
   time_ago: string
+}
+
+export interface RevenueData {
+  total_revenue_30d: number
+  mrr: number
+  active_subscriptions: number
+  total_transactions: number
+  avg_daily_revenue: number
+  recent_transactions: RevenueTransaction[]
+}
+
+export interface RevenueTransaction {
+  id: string
+  amount: number
+  currency: string
+  date: string
+  customer_id: string
 }
