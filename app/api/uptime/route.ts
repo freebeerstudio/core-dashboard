@@ -13,8 +13,8 @@ export async function GET() {
     // Get all sites
     const { data: sites, error: sitesError } = await supabase
       .from('sites')
-      .select('site_id, site_name, domain')
-      .eq('active', true);
+      .select('id, name, domain')
+      .in('status', ['production', 'development', 'staging']);
 
     if (sitesError) throw sitesError;
 
@@ -27,7 +27,7 @@ export async function GET() {
         const { data: checks, error: checksError } = await supabase
           .from('health_checks')
           .select('status, checked_at, response_time_ms')
-          .eq('site_id', site.site_id)
+          .eq('site_id', site.id)
           .gte('checked_at', twentyFourHoursAgo)
           .order('checked_at', { ascending: false });
 
@@ -38,8 +38,8 @@ export async function GET() {
 
         if (!checks || checks.length === 0) {
           return {
-            site_id: site.site_id,
-            site_name: site.site_name,
+            site_id: site.id,
+            site_name: site.name,
             domain: site.domain,
             uptime_percentage: null,
             total_checks: 0,
@@ -61,8 +61,8 @@ export async function GET() {
           : null;
 
         return {
-          site_id: site.site_id,
-          site_name: site.site_name,
+          site_id: site.id,
+          site_name: site.name,
           domain: site.domain,
           uptime_percentage: Math.round(uptimePercentage * 100) / 100, // 2 decimal places
           total_checks: checks.length,
