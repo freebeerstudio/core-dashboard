@@ -175,21 +175,21 @@ export default function Dashboard() {
                   <div>
                     <div className="flex justify-between items-baseline mb-2">
                       <span className="text-2xl font-bold">
-                        ${revenueData?.total_revenue_30d.toFixed(2) || '0.00'}
+                        ${revenueData ? revenueData.total_revenue_30d.toFixed(2) : '0.00'}
                       </span>
                       <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {revenueData?.total_transactions || 0} transaction{revenueData?.total_transactions !== 1 ? 's' : ''}
+                        {revenueData?.total_transactions ?? 0} transaction{(revenueData?.total_transactions ?? 0) !== 1 ? 's' : ''}
                       </span>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="text-zinc-600 dark:text-zinc-400">MRR</div>
-                      <div className="text-lg font-semibold">${revenueData?.mrr.toFixed(2) || '0.00'}</div>
+                      <div className="text-lg font-semibold">${revenueData ? revenueData.mrr.toFixed(2) : '0.00'}</div>
                     </div>
                     <div>
                       <div className="text-zinc-600 dark:text-zinc-400">Active Subs</div>
-                      <div className="text-lg font-semibold">{revenueData?.active_subscriptions || 0}</div>
+                      <div className="text-lg font-semibold">{revenueData?.active_subscriptions ?? 0}</div>
                     </div>
                   </div>
                   <div className="text-xs text-zinc-600 dark:text-zinc-400">
